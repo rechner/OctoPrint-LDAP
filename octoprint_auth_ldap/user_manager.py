@@ -27,7 +27,7 @@ class LDAPUserManager(FilebasedUserManager, DependentOnSettingsPlugin, Dependent
     def group_manager(self):
         return self._group_manager
 
-    def find_user(self, userid=None, apikey=None, session=None):
+    def find_user(self, userid=None, apikey=None, session=None, fresh=False):
         self.logger.debug("Search for userid=%s, apiKey=%s, session=%s" % (userid, apikey, session))
         user = FilebasedUserManager.find_user(self, userid=userid, apikey=apikey, session=session)
         user, userid = self._find_user_with_transformation(apikey, session, user, userid)
@@ -159,6 +159,8 @@ class LDAPUserManager(FilebasedUserManager, DependentOnSettingsPlugin, Dependent
             with io.open(self._userfile, 'rt', encoding='utf-8') as f:
                 data = yaml.safe_load(f)
                 for name, attributes in data.items():
+                    if name.startswith('_'):
+                        continue
                     permissions = self._to_permissions(*attributes.get("permissions", []))
                     groups = attributes.get("groups", {
                         self._group_manager.user_group  # the user group is mandatory for all logged in users
